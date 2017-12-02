@@ -1,8 +1,6 @@
-
-
 section .text
 BITS 16
-disk_buffer     equ 24576       ;vad ska den här vara?
+disk_buffer     equ 24576       ;why is this?
 
 os_call_vectors:
     jmp     os_main                 ; 0000h -- Called from bootloader
@@ -19,7 +17,7 @@ os_main:
     mov     sp,0FFFFh       ; Set stack pointer to end of segment
     sti                     ; Restore interrupts
 
-    cld                     ; clear direction flag
+    ;cld                     ; clear direction flag
 
     mov     ax,2000h        ; ax=adress where kernel is loaded
     mov     ds,ax           ; Set start of data segment
@@ -27,6 +25,7 @@ os_main:
     mov     fs,ax           ; new general segment register #1
     mov     gs,ax           ; new general segment register #2
     ;cs+ds?!?
+    cld
 
     mov     bh,0x30
     call    melos_clearscreen
@@ -35,13 +34,20 @@ os_main:
     call    melos_print_string
     
  debug_here:
-    mov     ax,2000h
+    mov     ax,ds
     mov     es,ax
     mov     bx,myBuffer
-    mov     cl,19
+    mov     cl,1
+    
+    mov dword[myBuffer],'test'
+    mov dword[myBuffer+4],13 
+    mov dword[myBuffer+5],10
+    mov dword[myBuffer+6],0
+    
     call    melos_readsectortobuffer
     mov     si,myBuffer
     call    melos_print_string
+    
     
     mov     si,txt_loadingok
     call    melos_print_string
