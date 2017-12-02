@@ -1,3 +1,6 @@
+
+
+section .text
 BITS 16
 disk_buffer     equ 24576       ;vad ska den här vara?
 
@@ -31,10 +34,17 @@ os_main:
     mov     si,txt_loadingkernel
     call    melos_print_string
     
-    mov     si,txt_loadingok
+ debug_here:
+    mov     ax,2000h
+    mov     es,ax
+    mov     bx,myBuffer
+    mov     cl,19
+    call    melos_readsectortobuffer
+    mov     si,myBuffer
     call    melos_print_string
     
-    
+    mov     si,txt_loadingok
+    call    melos_print_string
 
 
 infiniteloop:
@@ -48,5 +58,8 @@ infiniteloop:
 txt_loadingkernel   db 'Loading Ker(b)nel...',10,13,0
 txt_loadingok       db 'Kernel loaded OK!',10,13,0
 
-times 505-($-$$) db 0	; Pad remainder of kernel with 0s
+times 1017-($-$$) db 0	; Pad remainder of kernel with 0s
 db 'MELIEND'		; The end marker of kernel
+
+section .bss
+myBuffer    resb 512

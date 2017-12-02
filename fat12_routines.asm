@@ -1,22 +1,28 @@
-;-----------------    
-melos_clearscreen:
-;-----------------
-;IN bh=color attribute
+;------------------------    
+melos_readsectortobuffer:
+;------------------------
+;IN es:bx 512k buffer
+;   cl=which sector to read
 ;OUT nothing
     pusha
-
-    mov     ah,0x06         ;BIOS: scroll screen (CLS)
-    mov     al,0x00         ;entire screen
-    mov     cx,0            ;row,column upper left
-    mov     dh,24;
-    mov     dl,79;
-    int     10h
-    
-    mov     ah,02h          ;BIOS: set cursor position
-    mov     bh,0            ;page=0
-    mov     dh,0            ;row
-    mov     dl,0            ;column
-    int     10h             ;call BIOS    
-    
+    xor     ah,ah   ;floppy
+    int     0x13    ;reset floppy
+    mov     ah,0x1  ;BIOS function: read sector
+    mov     al,1    ;n sectors to read
+    mov     ch,0    ;low 8 bits of cylinder number
+    mov     dh,0    ;head number
+    mov     dl,0    ;drive number
+    int     0x13    ;call BIOS
+    jc      melos_IOError ;
     popa
-    ret
+ret
+
+melos_IOError:
+    pusha
+    mov     si,txt_IOError
+    call    melos_print_string
+    popa
+    jmp infiniteloop
+ret
+    
+txt_IOError db 'IO Error',10,13,0

@@ -1,7 +1,9 @@
+jmp     start
 ; ------------------------------------------------------------------
 ; Disk description table, to make it a valid floppy
 ; Note: some of these values are hard-coded in the source!
 ; Values are those used by IBM for 1.44 MB, 3.5" diskette
+
 
 OEM_ID                  db "MELIZZOS"       ; Disk label
 nBytesPerSector         dw 512              ; Bytes per sector
@@ -20,7 +22,7 @@ LargeSectors		dd 0		; Number of LBA sectors
 DriveNo			dw 0		; Drive No: 0
 Signature		db 41		; Drive signature: 41 for floppy
 VolumeID		dd 00000000h	; Volume ID: any number
-VolumeLabel		db "MIKEOS     "; Volume Label: any 11 chars
+VolumeLabel		db "MELIZZOS   "; Volume Label: any 11 chars
 FileSystem		db "FAT12   "	; File system type: don't change!
 
 
@@ -54,9 +56,10 @@ start:
     mov     es,ax                       ; put pointer in ES
     mov     bx,0000h                    ; offset = 0
 
-    mov     ax,1                        ; n sectors to read (each should be 512K. Update this when kernel grows)
+    mov     ax,1                        ; sector to start reading
     call    l2hts                       ; convert logic sector -> header,track,sector
     mov     ah,2                        ; func #2 of int 13h = read from disk
+    mov     al,2                        ; n sectors to read
     int     13h                         ; call BIOS
     jc      fatal_disk_error            ; carry flag means BIOS had a problem 
         
