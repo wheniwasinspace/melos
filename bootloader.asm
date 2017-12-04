@@ -5,25 +5,25 @@ jmp     start
 ; Values are those used by IBM for 1.44 MB, 3.5" diskette
 
 
-OEM_ID                  db "MELIZZOS"       ; Disk label
-nBytesPerSector         dw 512              ; Bytes per sector
-nSectorsPerCluster      db 1                ; Sectors per cluster
-ReservedForBoot         dw 1                ; Reserved sectors for boot record
-NoOfFats                db 2                ; Number of copies of the FAT
-RootDirEntries          dw 224              ; Number of entries in root dir
+OEM_ID                  db "MELIZZOS"       ; Disk label                                index 2
+nBytesPerSector         dw 512              ; Bytes per sector                          index 10
+nSectorsPerCluster      db 1                ; Sectors per cluster                       index 12
+ReservedForBoot         dw 1                ; Reserved sectors for boot record          index 13
+NoOfFats                db 2                ; Number of copies of the FAT               index 15
+RootDirEntries          dw 224              ; Number of entries in root dir             index 16
                                             ; (224 * 32 = 7168 = 14 sectors to read)
-LogicalSectors		dw 2880		; Number of logical sectors
-MediumByte		db 0F0h		; Medium descriptor byte
-SectorsPerFat		dw 9		; Sectors per FAT
-nSectorsPerTrack		dw 18		; Sectors per track (36/cylinder)
-Sides			dw 2		; Number of sides/heads
-HiddenSectors		dd 0		; Number of hidden sectors
-LargeSectors		dd 0		; Number of LBA sectors
-DriveNo			dw 0		; Drive No: 0
-Signature		db 41		; Drive signature: 41 for floppy
-VolumeID		dd 00000000h	; Volume ID: any number
-VolumeLabel		db "MELIZZOS   "; Volume Label: any 11 chars
-FileSystem		db "FAT12   "	; File system type: don't change!
+LogicalSectors          dw 2880             ; Number of logical sectors                 index 18
+MediumByte              db 0F0h             ; Medium descriptor byte                    index 20
+SectorsPerFat           dw 9                ; Sectors per FAT                           index 21
+nSectorsPerTrack        dw 18               ; Sectors per track (36/cylinder)           index 23
+Sides                   dw 2                ; Number of sides/heads                     index 25
+HiddenSectors           dd 0                ; Number of hidden sectors                  index 27
+LargeSectors            dd 0                ; Number of LBA sectors                     index 31
+DriveNo                 dw 0                ; Drive No: 0                               index 35
+Signature               db 41               ; Drive signature: 41 for floppy            index 37
+VolumeID                dd 00000000h        ; Volume ID: any number                     index 38
+VolumeLabel             db "MELIZZOS   "    ; Volume Label: any 11 chars                index 42
+FileSystem              db "FAT12   "       ; File system type: don't change!           index 53
 
 
 
@@ -37,8 +37,7 @@ start:
     mov     ds,ax                       ; Set data segment 
         
     mov     [disk],dl                   ; disk=identifier of which disk was booted
-
-
+    
     mov     si,txt_bootloader_welcome1   ; put welcome string in SI
     call    print_string                ; print it...
     
@@ -70,12 +69,15 @@ start:
     call    print_string
     
     ;remove this after beta
-    mov     cx,0x2d                      ; 3...
-    mov     dx,0xc6c0                    ; ...seconds
+;    mov     cx,0x2d                      ; 3...
+;    mov     dx,0xc6c0                    ; ...seconds
+    mov     cx,0xf                      ;1 sec
+    mov     dx,0x4240
     mov     ah,86h                      ;timer interupt
     int     15h                         ;call BIOS
 
     ;should probably check first thta we really found a valid kernel
+    mov     dl,byte[disk]               ; so Kernel knows what disk is booting up
     jmp     2000h:0000h                 ; Kernel loaded from disc to mem, execute it!
           
 fatal_disk_error:
@@ -94,7 +96,8 @@ reboot:
     disk_error              db 'Can not read the disc :(',10,13,0
     read_ok                 db 'disc->memory OK!',10,13,0
     disk                    db 0        ; Boot device number
-
+    txt_bootingfrom         db 'Booting from device: ',0
+    
 
 print_string:
 ; INPUT SI=pointer to null terminated string
