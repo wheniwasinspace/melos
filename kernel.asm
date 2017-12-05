@@ -85,45 +85,51 @@ os_main:
 
     mov     si,txt_checkingFS
     call    melos_print_string
-
-    mov     dl,0h
+    
+    xor     dx,dx                   ; dl=0h + wipe dh
 checknextfloppy:    
-    mov     si,txt_debug_kernel1    ;debug
-    call    melos_print_string
-
     xor     ax,ax
     mov     ah,15h
+    push    dx
     int     13h
+    pop     dx
     jc      nomorefloppys
     mov     si,txt_foundfloppy
     call    melos_print_string
-    shr     ax,8
+    mov     ax,dx
     call    debug_print_ax_dec
     call    melos_print_newline
-
-    mov     si,txt_debug_kernel2    ;debug
-    call    melos_print_string
-    
     inc     dl
     jmp     checknextfloppy
 nomorefloppys:
-    mov     dl,80h
+  
+    xor     dx,dx
+
+    mov     dl,0x80
+    ;här pushade jag
+    mov     ax,dx;debug
+    call    debug_print_ax_dec
+    call    melos_print_newline
+    call    debug_freeze3
+   
 checknextHD:    
     xor     ax,ax
     mov     ah,15h
+    push    dx
     int     13h
+    pop     dx
+        
     jc      nomoreHDs
     mov     si,txt_foundHD
+    
     call    melos_print_string
-    shr     ax,8
+     
+    mov     ax,dx
     call    debug_print_ax_dec
     call    melos_print_newline
     inc     dl
     jmp     checknextHD
 nomoreHDs:
-
-
-
     mov     si,txt_loadingok
     call    melos_print_string
 infiniteloop:
