@@ -102,16 +102,8 @@ checknextfloppy:
     inc     dl
     jmp     checknextfloppy
 nomorefloppys:
-  
     xor     dx,dx
-
-    mov     dl,0x80
-    ;här pushade jag
-    mov     ax,dx;debug
-    call    debug_print_ax_dec
-    call    melos_print_newline
-    call    debug_freeze3
-   
+    mov     dl,80h
 checknextHD:    
     xor     ax,ax
     mov     ah,15h
