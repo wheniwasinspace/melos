@@ -1,29 +1,30 @@
 jmp     start
+nop
 ; ------------------------------------------------------------------
 ; Disk description table, to make it a valid floppy
 ; Note: some of these values are hard-coded in the source!
 ; Values are those used by IBM for 1.44 MB, 3.5" diskette
 
 
-OEM_ID                  db "MELIZZOS"       ; Disk label                                index 2
-nBytesPerSector         dw 512              ; Bytes per sector                          index 10
-nSectorsPerCluster      db 1                ; Sectors per cluster                       index 12
-ReservedForBoot         dw 1                ; Reserved sectors for boot record          index 13
-NoOfFats                db 2                ; Number of copies of the FAT               index 15
-RootDirEntries          dw 224              ; Number of entries in root dir             index 16
+OEM_ID                  db "MELIZZOS"       ; Disk label                                index 3
+nBytesPerSector         dw 512              ; Bytes per sector                          index 11
+nSectorsPerCluster      db 1                ; Sectors per cluster                       index 13
+ReservedForBoot         dw 1                ; Reserved sectors for boot record          index 14
+NoOfFats                db 2                ; Number of copies of the FAT               index 16
+RootDirEntries          dw 224              ; Number of entries in root dir             index 17
                                             ; (224 * 32 = 7168 = 14 sectors to read)
 LogicalSectors          dw 2880             ; Number of logical sectors                 index 18
-MediumByte              db 0F0h             ; Medium descriptor byte                    index 20
-SectorsPerFat           dw 9                ; Sectors per FAT                           index 21
-nSectorsPerTrack        dw 18               ; Sectors per track (36/cylinder)           index 23
-Sides                   dw 2                ; Number of sides/heads                     index 25
-HiddenSectors           dd 0                ; Number of hidden sectors                  index 27
-LargeSectors            dd 0                ; Number of LBA sectors                     index 31
-DriveNo                 dw 0                ; Drive No: 0                               index 35
-Signature               db 41               ; Drive signature: 41 for floppy            index 37
-VolumeID                dd 00000000h        ; Volume ID: any number                     index 38
-VolumeLabel             db "MELIZZOS   "    ; Volume Label: any 11 chars                index 42
-FileSystem              db "FAT12   "       ; File system type: don't change!           index 53
+MediumByte              db 0F0h             ; Medium descriptor byte                    index 21
+SectorsPerFat           dw 9                ; Sectors per FAT                           index 22
+nSectorsPerTrack        dw 18               ; Sectors per track (36/cylinder)           index 24
+Sides                   dw 2                ; Number of sides/heads                     index 26
+HiddenSectors           dd 0                ; Number of hidden sectors                  index 28
+LargeSectors            dd 0                ; Number of LBA sectors                     index 32
+DriveNo                 dw 0                ; Drive No: 0                               index 36
+Signature               db 41               ; Drive signature: 41 for floppy            index 38
+VolumeID                dd 00000000h        ; Volume ID: any number                     index 39
+VolumeLabel             db "MELIZZOS   "    ; Volume Label: any 11 chars                index 43
+FileSystem              db "FAT12   "       ; File system type: don't change!           index 54
 
 
 

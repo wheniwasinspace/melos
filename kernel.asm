@@ -45,7 +45,6 @@ os_main:
 ;    mov     bx,myBuffer
 ;    mov     dl,128
 ;    mov     ax,cx
-;    add     ax,1
 ;    pusha
 ;    mov     si,txt_debug_kernel1
 ;    call    melos_print_string
@@ -64,26 +63,69 @@ os_main:
 ;    cmp     cx,1
 ;    jl      repeat14
     
-    mov     bx,myBuffer
-    mov     dl,128                      ; hardcoded for testing. change!
-    mov     ax,0
-    call    melos_readsectortobuffer
+;    mov     bx,myBuffer
+;    mov     dl,128                      ; hardcoded for testing. change!
+;    mov     ax,0
+;    call    melos_readsectortobuffer
+    
+;   mov     si,txt_reservedforboot
+;    call    melos_print_string
+;    xor     ax,ax
+;    mov     ax,word [myBuffer+14]
+;    call    debug_print_ax_dec
+;    call    melos_print_newline
     
 
-    mov     si,txt_debug_kernel1
+;    mov     si,txt_partitiontype
+;    call    melos_print_string
+;    mov     si,myBuffer+53
+;    mov     bx,8
+;    call    melos_printnchars
+;    call    melos_print_newline
+
+    mov     si,txt_checkingFS
     call    melos_print_string
-    mov     si,myBuffer+53
-    mov     bx,8
-    call    melos_printnchars
+
+    mov     dl,0h
+checknextfloppy:    
+    mov     si,txt_debug_kernel1    ;debug
+    call    melos_print_string
+
+    xor     ax,ax
+    mov     ah,15h
+    int     13h
+    jc      nomorefloppys
+    mov     si,txt_foundfloppy
+    call    melos_print_string
+    shr     ax,8
+    call    debug_print_ax_dec
     call    melos_print_newline
 
-      
+    mov     si,txt_debug_kernel2    ;debug
+    call    melos_print_string
     
+    inc     dl
+    jmp     checknextfloppy
+nomorefloppys:
+    mov     dl,80h
+checknextHD:    
+    xor     ax,ax
+    mov     ah,15h
+    int     13h
+    jc      nomoreHDs
+    mov     si,txt_foundHD
+    call    melos_print_string
+    shr     ax,8
+    call    debug_print_ax_dec
+    call    melos_print_newline
+    inc     dl
+    jmp     checknextHD
+nomoreHDs:
+
+
+
     mov     si,txt_loadingok
     call    melos_print_string
-
-
-
 infiniteloop:
     jmp     infiniteloop
     
@@ -96,7 +138,13 @@ infiniteloop:
 
 txt_loadingkernel   db 'Loading Ker(b)nel...',10,13,0
 txt_loadingok       db 'Kernel loaded OK!',10,13,0
-txt_debug_kernel1   db 'found partition type: ',0
+txt_partitiontype   db 'found partition type: ',0
+txt_reservedforboot db 'Sectors reserved for boot: ',0
+txt_debug_kernel1   db 'DEBUG 1',10,13,0
+txt_debug_kernel2   db 'DEBUG 2',10,13,0
+txt_checkingFS      db 'Identifying file systems...',10,13,0
+txt_foundfloppy     db 'Found floppy. Drive #',0
+txt_foundHD         db 'Found HD. Drive #',0
 
 bootdisk            db 0
 
