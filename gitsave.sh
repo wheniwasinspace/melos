@@ -1,12 +1,12 @@
 #!/bin/sh
-echo rm *.bin *.elf
+echo "removing compiled stuff (rm *bin *elf)"
 rm *.bin
 rm *.elf
 
-echo "Staging (git add .)"
+echo "Staging everything (git add .)"
 git add .
 
-echo "Committing (git commit -m \"autocommited by script\")"
+echo "Committing (git commit)"
 git commit 
 
 echo "pushing (git push)"
