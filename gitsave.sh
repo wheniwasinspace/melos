@@ -7,7 +7,7 @@ echo "Staging (git add .)"
 git add .
 
 echo "Committing (git commit -m \"autocommited by script\")"
-git commit -m "autocommited by script"
+git commit 
 
-echo "pushing (git push master remote"
-git push master remote
+echo "pushing (git push)"
+git push
