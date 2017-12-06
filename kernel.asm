@@ -86,6 +86,27 @@ os_main:
     mov     si,txt_checkingFS
     call    melos_print_string
     
+;    push    es
+;    push    si
+;    mov     bx,0040h
+;    mov     es,bx
+;    mov     si,0075h
+;    xor     ax,ax
+;    mov     al,byte [es:si]
+;    pop     si
+;    pop     es
+;    call    debug_print_ax_dec
+;    call    melos_print_newline
+;    call    debug_freeze3    
+    xor     ax,ax
+    mov     si,txt_nfixeddisks
+    call    melos_print_string
+    call    melos_diskop_getnfixeddisks
+    call    debug_print_ax_dec
+    call    melos_print_newline
+    
+    
+    
     xor     dx,dx                   ; dl=0h + wipe dh
 checknextfloppy:    
     xor     ax,ax
@@ -113,12 +134,13 @@ checknextHD:
         
     jc      nomoreHDs
     mov     si,txt_foundHD
-    
     call    melos_print_string
      
     mov     ax,dx
     call    debug_print_ax_dec
     call    melos_print_newline
+    mov     si,txt_debug_kernel1
+    call    melos_print_string
     inc     dl
     jmp     checknextHD
 nomoreHDs:
@@ -132,6 +154,7 @@ infiniteloop:
 %INCLUDE "debugfunctions.asm"
 %INCLUDE "screen_routines.asm"
 %INCLUDE "fat12_routines.asm"
+%INCLUDE "disk_routines.asm"
 
 
 txt_loadingkernel   db 'Loading Ker(b)nel...',10,13,0
@@ -143,6 +166,7 @@ txt_debug_kernel2   db 'DEBUG 2',10,13,0
 txt_checkingFS      db 'Identifying file systems...',10,13,0
 txt_foundfloppy     db 'Found floppy. Drive #',0
 txt_foundHD         db 'Found HD. Drive #',0
+txt_nfixeddisks     db 'Number of fixed disks installed: ',0
 
 bootdisk            db 0
 
