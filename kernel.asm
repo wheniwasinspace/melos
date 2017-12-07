@@ -1,6 +1,24 @@
 section .text
 BITS 16
-disk_buffer     equ 24576       ;why is this?
+
+%macro print_char 1
+    push    ax
+    mov     al,%1
+    call    melos_print_char
+    pop     ax
+%endmacro
+
+%macro print_string 1
+    mov     si,%1
+    call    melos_print_string
+%endmacro
+
+%macro print_nchars 1
+    push    bx
+    mov     bx,%1
+    call    melos_print_nchars
+    pop     bx
+%endmacro
 
 os_call_vectors:
     jmp     os_main                 ; 0000h -- Called from bootloader
@@ -85,27 +103,7 @@ os_main:
 
     mov     si,txt_checkingFS
     call    melos_print_string
-    
-;    push    es
-;    push    si
-;    mov     bx,0040h
-;    mov     es,bx
-;    mov     si,0075h
-;    xor     ax,ax
-;    mov     al,byte [es:si]
-;    pop     si
-;    pop     es
-;    call    debug_print_ax_dec
-;    call    melos_print_newline
-;    call    debug_freeze3    
-    xor     ax,ax
-    mov     si,txt_nfixeddisks
-    call    melos_print_string
-    call    melos_diskop_getnfixeddisks
-    call    debug_print_ax_dec
-    call    melos_print_newline
-    
-    
+   
     
     xor     dx,dx                   ; dl=0h + wipe dh
 checknextfloppy:    
@@ -115,37 +113,47 @@ checknextfloppy:
     int     13h
     pop     dx
     jc      nomorefloppys
-    mov     si,txt_foundfloppy
-    call    melos_print_string
+    print_string txt_foundfloppy
     mov     ax,dx
-    call    debug_print_ax_dec
+    call    melos_print_ax_dec
+    ;let check what file system this floppy has
+    print_char '('
+    mov     bx,myBuffer
+    mov     di,resb_filesystem
+    call    melos_getFloppyFileSystem
+    mov     si,resb_filesystem
+    print_nchars 8
+    print_char ')'
     call    melos_print_newline
     inc     dl
     jmp     checknextfloppy
 nomorefloppys:
-    xor     dx,dx
-    mov     dl,80h
-checknextHD:    
+    ;retrieve the number of fixed disks
     xor     ax,ax
-    mov     ah,15h
-    push    dx
-    int     13h
-    pop     dx
-        
-    jc      nomoreHDs
-    mov     si,txt_foundHD
-    call    melos_print_string
-     
-    mov     ax,dx
-    call    debug_print_ax_dec
+    print_string txt_nfixeddisks
+    call    melos_diskop_getnfixeddisks
+    call    melos_print_ax_dec
     call    melos_print_newline
-    mov     si,txt_debug_kernel1
-    call    melos_print_string
+
+    add     al,80h  ;al=max drive number
+    xor     dx,dx
+    mov     dl,80h  ;dl=first drive number
+checknextHD:
+    cmp     dl,al
+    jae     nomoreHDs   ;jump above or equal, ie if we've done all disks
+    print_string txt_foundHD
+    mov     ax,dx
+    call    melos_print_ax_dec
+    print_char '('
+    xor     ax,ax
+    call    melos_getFixedDiskFileSystem
+    call    melos_print_ax_dec
+    print_char ')'
+    call    melos_print_newline
     inc     dl
     jmp     checknextHD
 nomoreHDs:
-    mov     si,txt_loadingok
-    call    melos_print_string
+    print_string txt_loadingok
 infiniteloop:
     jmp     infiniteloop
     
@@ -174,4 +182,5 @@ times 1017-($-$$) db 0	; Pad remainder of kernel with 0s
 db 'MELIEND'		; The end marker of kernel
 
 section .bss
-myBuffer    resb 512
+myBuffer        resb 512
+resb_filesystem resb 8
