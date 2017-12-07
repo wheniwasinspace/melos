@@ -39,19 +39,14 @@ melos_getFixedDiskFileSystem:
 ;----------------------------
 ;INPUT dl=drive es:bx = 512K buffer
 ;OUTPUT result in al
-    push    ax
     push    cx;
-        mov     ax,0
-        call    melos_readsectortobuffer    ;read sector 0 to buffer
-            pusha
-            mov si,bx
-            mov bx,512
-            call melos_print_nchars
-            popa
-        add     bx,460                      ;index of FS info
+        push    ax
+            mov     ax,0                        ;read sector 0
+            call    melos_readsectortobuffer    ;read sector 0 to buffer
+        pop     ax
+        add     bx,450                    ;index of FS info
         mov     al, byte [bx]
     pop     cx
-    pop     ax
 ret
 ;------------------------    
 melos_readsectortobuffer:
@@ -63,26 +58,31 @@ melos_readsectortobuffer:
 ;OUT nothing
     pusha
         push ax
-    
             ;start by reseting drive
             mov     ah,0    ;bios function=reset drive
             int     0x13    ;call bios
         pop ax
         jc      melos_IOError
-                   
-    ;read one sector
-    ;mov     ax,1                        ; sector to start reading
-    call    l2hts                       ; convert logic sector -> header,track,sector
-   
-    mov     dl,128
-    mov     ah,02h                      ; func #2 of int 13h = read from disk
-    mov     al,1                        ; n sectors to read
-    int     13h                         ; call BIOS
-    
-   
-
-    jc      melos_IOError
-
+        ;read one sector
+        call    l2hts                       ; convert logic sector -> header,track,sector
+        mov     ah,02h                      ; func #2 of int 13h = read from disk
+        mov     al,1                        ; n sectors to read
+        int     13h                         ; call BIOS
+            pusha ;DEBUG
+            pushf
+                cmp dl,128
+                jne nextdebug
+                call melos_print_newline
+                call debug_print_dashline
+                mov si,bx
+                mov bx,512
+                call melos_print_nchars
+                call melos_print_newline
+                call debug_print_dashline
+                nextdebug:
+                popf
+            popa
+        jc      melos_IOError
     popa
 ret
 

@@ -13,11 +13,14 @@ BITS 16
     call    melos_print_string
 %endmacro
 
-%macro print_nchars 1
+%macro print_nchars 2
+    push    si
     push    bx
-    mov     bx,%1
-    call    melos_print_nchars
+        mov     si,%1
+        mov     bx,%2
+        call    melos_print_nchars
     pop     bx
+    pop     si
 %endmacro
 
 os_call_vectors:
@@ -116,14 +119,14 @@ checknextfloppy:
     print_string txt_foundfloppy
     mov     ax,dx
     call    melos_print_ax_dec
-    ;let check what file system this floppy has
+    ;let's check what file system this floppy has
     print_char '('
     mov     bx,myBuffer
     mov     di,resb_filesystem
     call    melos_getFloppyFileSystem
-    mov     si,resb_filesystem
-    print_nchars 8
+    print_nchars resb_filesystem,8
     print_char ')'
+    
     call    melos_print_newline
     inc     dl
     jmp     checknextfloppy
@@ -134,7 +137,6 @@ nomorefloppys:
     call    melos_diskop_getnfixeddisks
     call    melos_print_ax_dec
     call    melos_print_newline
-
     add     al,80h  ;al=max drive number
     xor     dx,dx
     mov     dl,80h  ;dl=first drive number
@@ -143,11 +145,15 @@ checknextHD:
     jae     nomoreHDs   ;jump above or equal, ie if we've done all disks
     print_string txt_foundHD
     mov     ax,dx
+    print_char '/'
+    print_char '/'
     call    melos_print_ax_dec
     print_char '('
     xor     ax,ax
     call    melos_getFixedDiskFileSystem
+    print_char '['
     call    melos_print_ax_dec
+    print_char ']'
     print_char ')'
     call    melos_print_newline
     inc     dl
