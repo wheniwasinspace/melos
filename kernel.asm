@@ -131,6 +131,13 @@ checknextfloppy:
     inc     dl
     jmp     checknextfloppy
 nomorefloppys:
+    ;TESTING
+    print_char '^'
+    mov dl,80h
+    mov ax,61
+    mov bx,anotherbuffer
+    call melos_readlbasectortobuffer
+
     ;retrieve the number of fixed disks
     xor     ax,ax
     print_string txt_nfixeddisks
@@ -145,16 +152,11 @@ checknextHD:
     jae     nomoreHDs   ;jump above or equal, ie if we've done all disks
     print_string txt_foundHD
     mov     ax,dx
-    print_char '/'
-    print_char '/'
     call    melos_print_ax_dec
-    print_char '('
     xor     ax,ax
     call    melos_getFixedDiskFileSystem
-    print_char '['
     call    melos_print_ax_dec
-    print_char ']'
-    print_char ')'
+
     call    melos_print_newline
     inc     dl
     jmp     checknextHD
@@ -184,9 +186,10 @@ txt_nfixeddisks     db 'Number of fixed disks installed: ',0
 
 bootdisk            db 0
 
-times 1017-($-$$) db 0	; Pad remainder of kernel with 0s
+times 1529-($-$$) db 0	; Pad remainder of kernel with 0s
 db 'MELIEND'		; The end marker of kernel
 
 section .bss
 myBuffer        resb 512
+anotherbuffer   resb 512
 resb_filesystem resb 8

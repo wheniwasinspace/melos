@@ -38,13 +38,14 @@ ret
 melos_getFixedDiskFileSystem:
 ;----------------------------
 ;INPUT dl=drive es:bx = 512K buffer
-;OUTPUT result in al
+;OUTPUT al=result typ as int
+;es:si = 8 byte identifier
     push    cx;
         push    ax
             mov     ax,0                        ;read sector 0
             call    melos_readsectortobuffer    ;read sector 0 to buffer
         pop     ax
-        add     bx,450                    ;index of FS info
+         add     bx,450                    ;index of FS info
         mov     al, byte [bx]
     pop     cx
 ret
@@ -65,23 +66,16 @@ melos_readsectortobuffer:
         jc      melos_IOError
         ;read one sector
         call    l2hts                       ; convert logic sector -> header,track,sector
+            pusha   ;DEBUG
+            print_char '*'
+            mov ax,cx
+            call debug_print_ax_dec
+            print_char '*'
+            call melos_print_newline
+            popa
         mov     ah,02h                      ; func #2 of int 13h = read from disk
         mov     al,1                        ; n sectors to read
         int     13h                         ; call BIOS
-            pusha ;DEBUG
-            pushf
-                cmp dl,128
-                jne nextdebug
-                call melos_print_newline
-                call debug_print_dashline
-                mov si,bx
-                mov bx,512
-                call melos_print_nchars
-                call melos_print_newline
-                call debug_print_dashline
-                nextdebug:
-                popf
-            popa
         jc      melos_IOError
     popa
 ret
@@ -131,10 +125,55 @@ l2hts:
         mov dl,al
     pop ax
     pop bx
-ret    
+ret
+
+;---------------------------
+melos_readlbasectortobuffer:
+;---------------------------
+;reads one sector from an LBA drive into memory
+;INPUT dl=drive ax=sector to read bx=pointer to buffer
+;OUTPUT
+pusha
+    mov     si,DAP
+    mov     [dap_startsector],ax ;store sector to read in DAP
+    mov     [dap_offset],bx ;store buffer pointer in DAP
+    mov     ah,42h      ;INT 13h AH=42h: Extended Read Sectors From Drive
+    mov     dl,80h      ;REMOVE, THIS SHOULD NOT BE HARDCODED
+    int     13h
+    jc melos_IOError
+
+
+        pusha;DEBUG
+            mov si,bx
+            call melos_print_newline
+            call debug_print_dashline
+            mov bx,512
+            call melos_print_nchars
+            call melos_print_newline
+            call debug_print_dashline
+            xor ax,ax
+            mov al,[dap_offset]
+            call melos_print_ax_dec
+            call melos_print_newline
+            call debug_print_dashline
+
+        popa
+            pusha
+            mov ax,bx
+            call melos_print_ax_dec
+            popa
+popa
+ret
     
 txt_IOError db 'IO Error',10,13,0
 myTempError db 'Drive timed out, assumed not ready',10,13,0
 txt_debug1  db 'DEBUG #1',10,13,0
 SectorsPerTrack		dw 18		; Sectors per track (36/cylinder)
 Sides			dw 2		; Number of sides/heads
+DAP:
+dap_size        db 10h  ;size of DAP (10h for a short DAP)
+dap_reserved    db 0    ;unused, should be 0
+dap_nsectors    dw 1    ;n sectors to read
+dap_segment     dw 0    ;segment:offset pointer(little endian)
+dap_offset      dw 0    ;
+dap_startsector dq 0    ;starting segment to read(8bytes)
