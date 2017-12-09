@@ -59,7 +59,7 @@ start:
     mov     ax,1                        ; sector to start reading
     call    l2hts                       ; convert logic sector -> header,track,sector
     mov     ah,2                        ; func #2 of int 13h = read from disk
-    mov     al,2                        ; n sectors to read
+    mov     al,4                        ; n sectors to read
     int     13h                         ; call BIOS
     jc      fatal_disk_error            ; carry flag means BIOS had a problem 
         

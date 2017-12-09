@@ -59,56 +59,11 @@ os_main:
     ; Present the loading screen
     mov     si,txt_loadingkernel
     call    melos_print_string
-
-
-;     mov     cx,0
-;repeat14:
-;    mov     bx,myBuffer
-;    mov     dl,128
-;    mov     ax,cx
-;    pusha
-;    mov     si,txt_debug_kernel1
-;    call    melos_print_string
-;    popa
-;    call    debug_print_ax_dec
-;    call    debug_print_newline
-;    call    melos_readsectortobuffer
-;    call    debug_print_dashline
-;    mov     bx,512
-;    mov     si,myBuffer
-;    call    melos_printnchars
-;    call    melos_print_newline
-;    call    debug_print_dashline
-;    call    debug_freeze1
-;    inc     cx
-;    cmp     cx,1
-;    jl      repeat14
-    
-;    mov     bx,myBuffer
-;    mov     dl,128                      ; hardcoded for testing. change!
-;    mov     ax,0
-;    call    melos_readsectortobuffer
-    
-;   mov     si,txt_reservedforboot
-;    call    melos_print_string
-;    xor     ax,ax
-;    mov     ax,word [myBuffer+14]
-;    call    debug_print_ax_dec
-;    call    melos_print_newline
-    
-
-;    mov     si,txt_partitiontype
-;    call    melos_print_string
-;    mov     si,myBuffer+53
-;    mov     bx,8
-;    call    melos_printnchars
-;    call    melos_print_newline
-
+ 
     mov     si,txt_checkingFS
     call    melos_print_string
    
-    
-    xor     dx,dx                   ; dl=0h + wipe dh
+   xor     dx,dx                   ; dl=0h + wipe dh
 checknextfloppy:    
     xor     ax,ax
     mov     ah,15h
@@ -121,9 +76,11 @@ checknextfloppy:
     call    melos_print_ax_dec
     ;let's check what file system this floppy has
     print_char '('
+    
     mov     bx,myBuffer
     mov     di,resb_filesystem
     call    melos_getFloppyFileSystem
+    
     print_nchars resb_filesystem,8
     print_char ')'
     
@@ -131,11 +88,16 @@ checknextfloppy:
     inc     dl
     jmp     checknextfloppy
 nomorefloppys:
+    ;call melos_test
+  
     ;TESTING
-    print_char '^'
+    
     mov dl,80h
-    mov ax,61
-    mov bx,anotherbuffer
+    mov ax,0
+    mov bx,myBuffer
+    mov [myBuffer],byte 'F'
+    mov [myBuffer+1],byte 'E'
+    mov [myBuffer+2],byte 'L'
     call melos_readlbasectortobuffer
 
     ;retrieve the number of fixed disks
@@ -186,10 +148,11 @@ txt_nfixeddisks     db 'Number of fixed disks installed: ',0
 
 bootdisk            db 0
 
-times 1529-($-$$) db 0	; Pad remainder of kernel with 0s
+Low6bits            db 00111111b        ; bitmask to get 6 lowest bit of a byte
+
+times 2050-($-$$) db 0	; Pad remainder of kernel with 0s
 db 'MELIEND'		; The end marker of kernel
 
 section .bss
-myBuffer        resb 512
-anotherbuffer   resb 512
 resb_filesystem resb 8
+myBuffer        resb 512

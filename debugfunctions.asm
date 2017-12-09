@@ -71,6 +71,7 @@ debug_print_newline:
     
 debug_print_dashline:
     pusha
+        call    debug_print_newline
         mov     bx,80
 debug_printdashagain:        
         mov     ah,0Eh

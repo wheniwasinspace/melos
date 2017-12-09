@@ -23,7 +23,8 @@ melos_print_char:
 ret    
     
 melos_print_nchars:
-;INPUT DS:SI=string bx=size of string
+;INPUT 
+;DS:SI=string bx=size of string
 ;print a fixed length string
     pusha                   ; save state of all registers
     mov     ah,0Eh          ; int10h 0E = print char

@@ -23,12 +23,14 @@ melos_getFloppyFileSystem:
     push    ax
     push    si
     push    cx
+    push    bx
         mov     ax,0
         call    melos_readsectortobuffer    ;read sector 0 to buffer
         add     bx,54                       ;index of FS info
         mov     si, bx                      ;si=pointer to read buffer
         mov     cx,8                        ;we want to copy 8 bytes
         rep movsb                           ;copy in buffer -> out buffer
+    pop     bx
     pop     cx
     pop     si
     pop     ax
@@ -66,13 +68,6 @@ melos_readsectortobuffer:
         jc      melos_IOError
         ;read one sector
         call    l2hts                       ; convert logic sector -> header,track,sector
-            pusha   ;DEBUG
-            print_char '*'
-            mov ax,cx
-            call debug_print_ax_dec
-            print_char '*'
-            call melos_print_newline
-            popa
         mov     ah,02h                      ; func #2 of int 13h = read from disk
         mov     al,1                        ; n sectors to read
         int     13h                         ; call BIOS
@@ -82,8 +77,8 @@ ret
 
 melos_IOError:
     pusha
-    mov     si,txt_IOError
-    call    melos_print_string
+    print_char 'E'              ;DEBUG REMOVE
+    print_string txt_IOError
     
     mov     ah,0x01
     mov     dl,0x0
@@ -128,6 +123,22 @@ l2hts:
 ret
 
 ;---------------------------
+melos_test:
+;---------------------------
+pusha
+    mov     ah,0x42
+    mov     dl,0x80
+    mov     si,bajsDAP
+    mov     [BufferOffset],word myBuffer
+    mov     [BufferSegment],word ds
+    int     0x13
+    jc      melos_IOError
+    call debug_print_dashline
+    print_nchars myBuffer,512
+    call debug_print_dashline
+popa
+ret
+;---------------------------
 melos_readlbasectortobuffer:
 ;---------------------------
 ;reads one sector from an LBA drive into memory
@@ -135,31 +146,24 @@ melos_readlbasectortobuffer:
 ;OUTPUT
 pusha
     mov     si,DAP
-    mov     [dap_startsector],ax ;store sector to read in DAP
-    mov     [dap_offset],bx ;store buffer pointer in DAP
+;    mov     [dap_startsector], qword 0 ;store sector to read in DAP
+    mov     [dap_offset],word myBuffer
+    mov     [dap_segment],word ds
     mov     ah,42h      ;INT 13h AH=42h: Extended Read Sectors From Drive
     mov     dl,80h      ;REMOVE, THIS SHOULD NOT BE HARDCODED
     int     13h
+    
     jc melos_IOError
-
-
         pusha;DEBUG
-            mov si,bx
             call melos_print_newline
             call debug_print_dashline
-            mov bx,512
-            call melos_print_nchars
+            print_nchars myBuffer,512
             call melos_print_newline
             call debug_print_dashline
-            xor ax,ax
-            mov al,[dap_offset]
-            call melos_print_ax_dec
-            call melos_print_newline
-            call debug_print_dashline
-
         popa
             pusha
-            mov ax,bx
+            xor ax,ax
+            mov al,[myBuffer+454]
             call melos_print_ax_dec
             popa
 popa
@@ -171,9 +175,24 @@ txt_debug1  db 'DEBUG #1',10,13,0
 SectorsPerTrack		dw 18		; Sectors per track (36/cylinder)
 Sides			dw 2		; Number of sides/heads
 DAP:
-dap_size        db 10h  ;size of DAP (10h for a short DAP)
-dap_reserved    db 0    ;unused, should be 0
-dap_nsectors    dw 1    ;n sectors to read
-dap_segment     dw 0    ;segment:offset pointer(little endian)
-dap_offset      dw 0    ;
-dap_startsector dq 0    ;starting segment to read(8bytes)
+dap_size        db 0x10      ;size of DAP (10h for a short DAP)      1
+dap_reserved    db 0x0        ;unused, should be                      1
+dap_nsectors    dw 1        ;n sectors to read                      2
+dap_offset      dw 0     ;                                       4
+dap_segment     dw 0
+dap_startsector dq 249        ;starting segment to read(8bytes)       8
+
+
+;00h    BYTE    size of packet (10h or 18h)
+;01h    BYTE    reserved (0)
+;02h    WORD    number of blocks to transfer (max 007Fh for Phoenix EDD)
+;04h    DWORD   -> transfer buffer
+;08h    QWORD   starting absolute block number
+
+bajsDAP:
+size            db 0x10
+reserved        db 0x0
+sectorcount     dw 1
+BufferOffset    dw 0
+BufferSegment   dw 0
+LBA             dq 0
