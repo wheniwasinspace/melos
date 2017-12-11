@@ -1,5 +1,14 @@
 SEGMENT_BIOS                EQU 0040h
 OFFSET_BIOS_FIXED_DRIVES    EQU 0075h
+;----------------------
+melos_disk_isDiskReady:
+;----------------------
+;INPUT dl=disk
+push    ax
+    mov     ah,0            ;bios function=reset drive
+    int     0x13            ;call bios
+    jc      melos_IOError
+pop     ax
 ;---------------------------
 melos_diskop_getnfixeddisks:
 ;---------------------------

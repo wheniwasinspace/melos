@@ -87,6 +87,7 @@ checknextfloppy:
     print_char '('
     mov     bx,myBuffer
     mov     di,resb_filesystem
+    call    melos_disk_isDiskReady  ;check if this is working and make a jump if not ready
     call    melos_getFloppyFileSystem
     print_nchars resb_filesystem,8
     print_char ')'
@@ -95,7 +96,6 @@ checknextfloppy:
     inc     dl
     jmp     checknextfloppy
 nomorefloppys:
-    print_char '$'
     mov dl,80h
     mov ax,0
     mov bx,myBuffer
@@ -103,10 +103,7 @@ nomorefloppys:
 
     ;retrieve the number of fixed disks
     xor     ax,ax
-    print_string txt_nfixeddisks
     call    melos_diskop_getnfixeddisks
-    print_ax_dec
-    call    melos_print_newline
     add     al,80h  ;al=max drive number
     xor     dx,dx
     mov     dl,80h  ;dl=first drive number
