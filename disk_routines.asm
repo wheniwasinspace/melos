@@ -39,17 +39,28 @@ ret
 ;----------------------------
 melos_getFixedDiskFileSystem:
 ;----------------------------
-;INPUT dl=drive es:bx = 512K buffer
-;OUTPUT al=result typ as int
-;es:si = 8 byte identifier
-    push    cx;
-        push    ax
-            mov     ax,0                        ;read sector 0
-            call    melos_readsectortobuffer    ;read sector 0 to buffer
-        pop     ax
-         add     bx,450                    ;index of FS info
-        mov     al, byte [bx]
+;INPUT dl=drive es:bx = 512K buffer,
+;di = pointer to buffer for 8 byte identifier
+;OUTPUT 
+    push    ax
+    push    cx
+    push    si
+    push    bx
+        mov     ax,0                            ;read sector 0
+        call    melos_readlbasectortobuffer     ;read sector 0 to buffer
+        add     bx,454                          ;index partition 1 start
+        mov     ax,  [bx]                       ;ax=start sector of filesystem #1
+    pop     bx
+    push    bx
+        call    melos_readlbasectortobuffer     ;read the sector with fs info
+        add     bx,54                           ;start of 8 bytes fs descriptor
+        mov     si, bx                          ;si=pointer to read buffer
+        mov     cx,8                            ;we want to copy 8 bytes
+        rep movsb                               ;copy cx chars from si to di
+    pop     bx
+    pop     si
     pop     cx
+    pop     ax
 ret
 ;------------------------    
 melos_readsectortobuffer:
@@ -123,22 +134,6 @@ l2hts:
 ret
 
 ;---------------------------
-melos_test:
-;---------------------------
-pusha
-    mov     ah,0x42
-    mov     dl,0x80
-    mov     si,bajsDAP
-    mov     [BufferOffset],word myBuffer
-    mov     [BufferSegment],word ds
-    int     0x13
-    jc      melos_IOError
-    call debug_print_dashline
-    print_nchars myBuffer,512
-    call debug_print_dashline
-popa
-ret
-;---------------------------
 melos_readlbasectortobuffer:
 ;---------------------------
 ;reads one sector from an LBA drive into memory
@@ -146,26 +141,12 @@ melos_readlbasectortobuffer:
 ;OUTPUT
 pusha
     mov     si,DAP
-;    mov     [dap_startsector], qword 0 ;store sector to read in DAP
+    mov     [dap_startsector], ax ;HOW TO HANDLE LARGER SECTOR NUMBERS?
     mov     [dap_offset],word myBuffer
     mov     [dap_segment],word ds
     mov     ah,42h      ;INT 13h AH=42h: Extended Read Sectors From Drive
-    mov     dl,80h      ;REMOVE, THIS SHOULD NOT BE HARDCODED
     int     13h
-    
     jc melos_IOError
-        pusha;DEBUG
-            call melos_print_newline
-            call debug_print_dashline
-            print_nchars myBuffer,512
-            call melos_print_newline
-            call debug_print_dashline
-        popa
-            pusha
-            xor ax,ax
-            mov al,[myBuffer+454]
-            call melos_print_ax_dec
-            popa
 popa
 ret
     
@@ -180,19 +161,4 @@ dap_reserved    db 0x0        ;unused, should be                      1
 dap_nsectors    dw 1        ;n sectors to read                      2
 dap_offset      dw 0     ;                                       4
 dap_segment     dw 0
-dap_startsector dq 249        ;starting segment to read(8bytes)       8
-
-
-;00h    BYTE    size of packet (10h or 18h)
-;01h    BYTE    reserved (0)
-;02h    WORD    number of blocks to transfer (max 007Fh for Phoenix EDD)
-;04h    DWORD   -> transfer buffer
-;08h    QWORD   starting absolute block number
-
-bajsDAP:
-size            db 0x10
-reserved        db 0x0
-sectorcount     dw 1
-BufferOffset    dw 0
-BufferSegment   dw 0
-LBA             dq 0
+dap_startsector dq 0        ;starting segment to read(8bytes)       8 test 249=msdos

@@ -44,12 +44,12 @@ os_main:
     mov     es,ax           ; and extra segment
     mov     fs,ax           ; general segment register #1
     mov     gs,ax           ; general segment register #2
-    ;cs+ds?!?
+    ;cs?!?
     
     mov     [bootdisk],dl   ; save the drive num boot disk
     
     
-    cld
+    cld     ;normal string operations = forward in mem
     
   
     ; Clear screen
@@ -88,16 +88,9 @@ checknextfloppy:
     inc     dl
     jmp     checknextfloppy
 nomorefloppys:
-    ;call melos_test
-  
-    ;TESTING
-    
     mov dl,80h
     mov ax,0
     mov bx,myBuffer
-    mov [myBuffer],byte 'F'
-    mov [myBuffer+1],byte 'E'
-    mov [myBuffer+2],byte 'L'
     call melos_readlbasectortobuffer
 
     ;retrieve the number of fixed disks
@@ -115,9 +108,12 @@ checknextHD:
     print_string txt_foundHD
     mov     ax,dx
     call    melos_print_ax_dec
-    xor     ax,ax
+    mov     di,resb_filesystem
+    mov     bx,myBuffer
     call    melos_getFixedDiskFileSystem
-    call    melos_print_ax_dec
+    print_char '('
+    print_nchars resb_filesystem,8
+    print_char ')'
 
     call    melos_print_newline
     inc     dl
@@ -145,6 +141,7 @@ txt_checkingFS      db 'Identifying file systems...',10,13,0
 txt_foundfloppy     db 'Found floppy. Drive #',0
 txt_foundHD         db 'Found HD. Drive #',0
 txt_nfixeddisks     db 'Number of fixed disks installed: ',0
+
 
 bootdisk            db 0
 
