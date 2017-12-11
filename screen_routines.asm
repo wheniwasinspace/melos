@@ -78,7 +78,7 @@ melos_clearscreen:
 melos_print_ax_dec:
 ;-----------------
 ;prints the content of AX as decimal integer
-;IN ds:si=buffer to write to AX=integer to print
+;IN si=buffer to write to AX=integer to print
 pusha
     cmp     ax,0            ;is the number 0?
     jne     print_ax_dec_notzero

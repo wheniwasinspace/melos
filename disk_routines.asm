@@ -149,6 +149,28 @@ pusha
     jc melos_IOError
 popa
 ret
+
+;----------------------
+melos_canBIOShandleLBA:
+;----------------------
+;checks if BIOS can adress hard drives with LBA.
+;INPUT none dl=drive to check
+;OUTPUT ah=major version of extension.
+    mov     ah,0x41      ;BIOS function Extensions - installation check
+    mov     bx,0x55AA   ;reversed order after call if extensions ok
+    int     0x13        ;call BIOS
+    jc      melos_disk_noLBA    ;carry flag=wrong drive number or strange BIOS, bail
+    cmp     bx,0xAA55   ;bits reversed?
+    jne     melos_disk_noLBA     ;extrensions not OK on this drive, bail
+    ;Extensions installed. Yay
+ret
+melos_disk_noLBA:
+    mov     ah,0xFF
+ret
+    
+    
+
+
     
 txt_IOError db 'IO Error',10,13,0
 myTempError db 'Drive timed out, assumed not ready',10,13,0

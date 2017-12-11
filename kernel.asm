@@ -23,6 +23,14 @@ BITS 16
     pop     si
 %endmacro
 
+%macro print_ax_dec 0
+push    si
+    mov     si,tmp6byteBuffer
+    call    melos_print_ax_dec    
+pop     si
+%endmacro
+
+
 os_call_vectors:
     jmp     os_main                 ; 0000h -- Called from bootloader
     jmp     melos_print_string      ; 0003h
@@ -63,24 +71,23 @@ os_main:
     mov     si,txt_checkingFS
     call    melos_print_string
    
-   xor     dx,dx                   ; dl=0h + wipe dh
-checknextfloppy:    
+   xor     dx,dx                    ; dl=0h + wipe dh
+checknextfloppy:
     xor     ax,ax
-    mov     ah,15h
-    push    dx
-    int     13h
+    mov     ah,0x15                 ;BIOS func: get disk type
+    push    dx                      ;gets destroyed by int0x13
+        int     0x13                ;call BIOS
+        jc      nomorefloppys
     pop     dx
-    jc      nomorefloppys
+    
     print_string txt_foundfloppy
     mov     ax,dx
-    call    melos_print_ax_dec
+    print_ax_dec
     ;let's check what file system this floppy has
     print_char '('
-    
     mov     bx,myBuffer
     mov     di,resb_filesystem
     call    melos_getFloppyFileSystem
-    
     print_nchars resb_filesystem,8
     print_char ')'
     
@@ -88,6 +95,7 @@ checknextfloppy:
     inc     dl
     jmp     checknextfloppy
 nomorefloppys:
+    print_char '$'
     mov dl,80h
     mov ax,0
     mov bx,myBuffer
@@ -97,7 +105,7 @@ nomorefloppys:
     xor     ax,ax
     print_string txt_nfixeddisks
     call    melos_diskop_getnfixeddisks
-    call    melos_print_ax_dec
+    print_ax_dec
     call    melos_print_newline
     add     al,80h  ;al=max drive number
     xor     dx,dx
@@ -107,7 +115,15 @@ checknextHD:
     jae     nomoreHDs   ;jump above or equal, ie if we've done all disks
     print_string txt_foundHD
     mov     ax,dx
-    call    melos_print_ax_dec
+    print_ax_dec
+    call    melos_canBIOShandleLBA
+    cmp     ah,0xFF
+    je      noLBA
+    print_string txt_LBAenabled
+    jmp     checkFS
+noLBA:
+    print_string txt_LBAnotEnabled
+checkFS:
     mov     di,resb_filesystem
     mov     bx,myBuffer
     call    melos_getFixedDiskFileSystem
@@ -141,6 +157,8 @@ txt_checkingFS      db 'Identifying file systems...',10,13,0
 txt_foundfloppy     db 'Found floppy. Drive #',0
 txt_foundHD         db 'Found HD. Drive #',0
 txt_nfixeddisks     db 'Number of fixed disks installed: ',0
+txt_LBAenabled      db ' LBA mode ',0
+txt_LBAnotEnabled   db ' CHS mode ',0
 
 
 bootdisk            db 0
@@ -152,4 +170,5 @@ db 'MELIEND'		; The end marker of kernel
 
 section .bss
 resb_filesystem resb 8
+tmp6byteBuffer  resb 6
 myBuffer        resb 512
