@@ -4,11 +4,17 @@ OFFSET_BIOS_FIXED_DRIVES    EQU 0075h
 melos_disk_isDiskReady:
 ;----------------------
 ;INPUT dl=disk
-push    ax
-    mov     ah,0            ;bios function=reset drive
+pusha
+push es
+    mov ax,0
+    mov es,ax
+    mov di,0
+    mov     ah,8            ;bios function=get drive parameters
     int     0x13            ;call bios
-    jc      melos_IOError
-pop     ax
+    jc      melos_FatalIOError
+pop es
+popa
+ret
 ;---------------------------
 melos_diskop_getnfixeddisks:
 ;---------------------------
@@ -71,6 +77,7 @@ melos_getFixedDiskFileSystem:
     pop     cx
     pop     ax
 ret
+
 ;------------------------    
 melos_readsectortobuffer:
 ;------------------------
@@ -80,37 +87,37 @@ melos_readsectortobuffer:
 ;ax=which logical sector to read
 ;OUT nothing
     pusha
-        push ax
-            ;start by reseting drive
-            mov     ah,0    ;bios function=reset drive
-            int     0x13    ;call bios
-        pop ax
-        jc      melos_IOError
+        mov     cx,2                        ;retries left
+melos_readsectortobufferTryAgain:        
+        call    melos_disk_resetdrive
         ;read one sector
         call    l2hts                       ; convert logic sector -> header,track,sector
         mov     ah,02h                      ; func #2 of int 13h = read from disk
         mov     al,1                        ; n sectors to read
         int     13h                         ; call BIOS
-        jc      melos_IOError
+        jnc     melos_readsectortobufferDone
+        dec     cx
+        cmp     cx,0                        ;this can prob be optimized away?
+        jg      melos_readsectortobufferTryAgain 
+melos_readsectortobufferDone:
     popa
 ret
 
-melos_IOError:
-    pusha
-    print_char 'E'              ;DEBUG REMOVE
+melos_FatalIOError:
+    print_char 'E'
+    print_char 'E'
+    print_char 'E'
     print_string txt_IOError
     
     mov     ah,0x01
     mov     dl,0x0
     int     0x13
     cmp     ah,0x80
-    je     tmploop
-    mov si,myTempError
-    call melos_print_string
-    
-    popa
-tmploop:
-    jmp tmploop
+    je      melos_disk_fatalErrorLoop
+    mov     si,myTempError
+    call    melos_print_string
+melos_disk_fatalErrorLoop:
+    jmp melos_disk_fatalErrorLoop
 ret
 
 l2hts:
@@ -153,9 +160,16 @@ pusha
     mov     [dap_startsector], ax ;HOW TO HANDLE LARGER SECTOR NUMBERS?
     mov     [dap_offset],word myBuffer
     mov     [dap_segment],word ds
+    mov     cx,2
+melos_readlbasectortobufferretry:
+    call    melos_disk_resetdrive
     mov     ah,42h      ;INT 13h AH=42h: Extended Read Sectors From Drive
     int     13h
-    jc melos_IOError
+    jnc     melos_readlbasectortobufferdone
+    dec     cx
+    cmp     cx,0        ;can prob be optimized away?
+    jg      melos_readlbasectortobufferretry
+melos_readlbasectortobufferdone:
 popa
 ret
 
@@ -176,12 +190,25 @@ ret
 melos_disk_noLBA:
     mov     ah,0xFF
 ret
+
+;---------------------
+melos_disk_resetdrive:
+;---------------------
+;INPUT dl=drive
+;OUTPUT none
+    push ax
+        ;start by reseting drive
+        mov     ah,0    ;bios function=reset drive
+        int     0x13    ;call bios
+    pop ax
+ret
+
     
     
 
 
     
-txt_IOError db 'IO Error',10,13,0
+txt_IOError db 'Fatal IO Error. System suspended',10,13,0
 myTempError db 'Drive timed out, assumed not ready',10,13,0
 txt_debug1  db 'DEBUG #1',10,13,0
 SectorsPerTrack		dw 18		; Sectors per track (36/cylinder)

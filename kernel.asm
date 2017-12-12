@@ -162,7 +162,7 @@ bootdisk            db 0
 
 Low6bits            db 00111111b        ; bitmask to get 6 lowest bit of a byte
 
-times 2050-($-$$) db 0	; Pad remainder of kernel with 0s
+times 2553-($-$$) db 0	; Pad remainder of kernel with 0s 5 sectors need to match this in bootloader
 db 'MELIEND'		; The end marker of kernel
 
 section .bss

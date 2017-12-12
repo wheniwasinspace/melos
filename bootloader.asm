@@ -59,7 +59,7 @@ start:
     mov     ax,1                        ; sector to start reading
     call    l2hts                       ; convert logic sector -> header,track,sector
     mov     ah,2                        ; func #2 of int 13h = read from disk
-    mov     al,4                        ; n sectors to read
+    mov     al,5                        ; n sectors to read CORRESPONDS TO SIZE OF KERNEL.BIN
     int     13h                         ; call BIOS
     jc      fatal_disk_error            ; carry flag means BIOS had a problem 
         
@@ -69,13 +69,13 @@ start:
     mov     si,txt_startingOS
     call    print_string
     
-    ;remove this after beta
+;remove this after beta
 ;    mov     cx,0x2d                      ; 3...
 ;    mov     dx,0xc6c0                    ; ...seconds
-    mov     cx,0xf                      ;1 sec
-    mov     dx,0x4240
-    mov     ah,86h                      ;timer interupt
-    int     15h                         ;call BIOS
+;    mov     cx,0xf                      ;1 sec
+;    mov     dx,0x4240
+;    mov     ah,86h                      ;timer interupt
+;    int     15h                         ;call BIOS
 
     ;should probably check first thta we really found a valid kernel
     mov     dl,byte[disk]               ; so Kernel knows what disk is booting up
