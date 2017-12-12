@@ -133,6 +133,13 @@ checkFS:
     jmp     checknextHD
 nomoreHDs:
     print_string txt_loadingok
+    
+
+    mov     dl,0x80 ;HARDCODED FOR TESTING
+    mov     bx,myBuffer
+    call    melos_fat16_getRootDirStart
+
+    
 infiniteloop:
     jmp     infiniteloop
     
@@ -140,8 +147,10 @@ infiniteloop:
 
 %INCLUDE "debugfunctions.asm"
 %INCLUDE "screen_routines.asm"
-%INCLUDE "fat12_routines.asm"
 %INCLUDE "disk_routines.asm"
+%INCLUDE "fat12_routines.asm"
+%INCLUDE "fat16_routines.asm"
+
 
 
 txt_loadingkernel   db 'Loading Ker(b)nel...',10,13,0
