@@ -7,13 +7,17 @@ melos_fat16_getRootDirStart:
 ;OUTPUT
     push    ax
     push    bx
+        mov     cx,1;PUSH IT
+        call    melos_getFixedDiskStartOfPartition
         mov     ax,0                            ;read sector 0=boot sector
         call    melos_readlbasectortobuffer
         print_string txt_debug_nbytespblock
-        add     bx,0x0b
+        add     bx,0x036
         mov     ax,word[bx]
-        print_ax_dec
-        call    melos_print_newline    
+        ;print_ax_dec
+        call    debug_print_dashline
+        print_nchars bx,8
+        call    debug_print_dashline   
     pop     bx
     pop     ax
 ret

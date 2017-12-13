@@ -203,6 +203,32 @@ melos_disk_resetdrive:
     pop ax
 ret
 
+;----------------------------------
+melos_getFixedDiskStartOfPartition:
+;----------------------------------
+;INPUT dl=drive bx = 512K buffer, cx=partion(1-4)
+;di = pointer to buffer for 8 byte identifier
+;OUTPUT 
+    push    ax
+    push    bx
+        push    ax
+            mov     ax,cx
+            mov     cx,16
+            mul     cx
+            mov     cx,ax
+            add     cx,438
+        pop     ax
+        mov     ax,0                            ;read sector 0
+        call    melos_readlbasectortobuffer     ;read sector 0 to buffer
+        add     bx,cx                           ;index partition #cx start (438+part*16)
+        mov     ax,  [bx]                       ;ax=start sector of filesystem #1
+        print_char '%'
+        print_ax_dec
+        print_char '%'
+    pop     bx
+    pop     ax
+ret
+
     
     
 
@@ -214,9 +240,9 @@ txt_debug1  db 'DEBUG #1',10,13,0
 SectorsPerTrack		dw 18		; Sectors per track (36/cylinder)
 Sides			dw 2		; Number of sides/heads
 DAP:
-dap_size        db 0x10      ;size of DAP (10h for a short DAP)      1
-dap_reserved    db 0x0        ;unused, should be                      1
-dap_nsectors    dw 1        ;n sectors to read                      2
-dap_offset      dw 0     ;                                       4
-dap_segment     dw 0
-dap_startsector dq 0        ;starting segment to read(8bytes)       8 test 249=msdos
+dap_size        db 0x10     ;size of DAP (10h for a short DAP)
+dap_reserved    db 0x0      ;unused, should be
+dap_nsectors    dw 1        ;n sectors to read
+dap_offset      dw 0        ;buffer offset
+dap_segment     dw 0        ;buffer segment
+dap_startsector dq 0        ;starting sector to read(8bytes)
