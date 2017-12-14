@@ -223,7 +223,8 @@ melos_getFixedDiskStartOfPartition:
         add     bx,cx                           ;index partition #cx start (438+part*16)
         mov     ax,  [bx]                       ;ax=start sector of filesystem #1
         print_char '%'
-        print_ax_dec
+        ;print_ax_dec
+        print_nchars bx,4
         print_char '%'
     pop     bx
     pop     ax
