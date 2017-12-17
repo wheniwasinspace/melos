@@ -138,6 +138,15 @@ nomoreHDs:
     mov     dl,0x80 ;HARDCODED FOR TESTING
     mov     bx,myBuffer
     call    melos_fat16_getRootDirStart
+    print_string    txt_total
+    print_ax_dec
+    inc ax
+    mov     dl,0x80 ;HARDCODED FOR TESTING
+    mov     bx,myBuffer
+    call    melos_readlbasectortobuffer
+    call    debug_print_dashline
+    print_nchars myBuffer,512
+    call    debug_print_dashline
 
     
 infiniteloop:
@@ -165,6 +174,7 @@ txt_foundHD         db 'Found HD. Drive #',0
 txt_nfixeddisks     db 'Number of fixed disks installed: ',0
 txt_LBAenabled      db ' LBA mode ',0
 txt_LBAnotEnabled   db ' CHS mode ',0
+txt_total           db 'Total skip: ',0
 
 
 bootdisk            db 0

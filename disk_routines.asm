@@ -208,7 +208,9 @@ melos_getFixedDiskStartOfPartition:
 ;----------------------------------
 ;INPUT dl=drive bx = 512K buffer, cx=partion(1-4)
 ;di = pointer to buffer for 8 byte identifier
-;OUTPUT 
+;OUTPUT
+;BUGS: should read 4 bytes and flip them. This function will not find partitions
+;starting on a sector described with more than one byte
     push    ax
     push    bx
         push    ax
@@ -222,10 +224,6 @@ melos_getFixedDiskStartOfPartition:
         call    melos_readlbasectortobuffer     ;read sector 0 to buffer
         add     bx,cx                           ;index partition #cx start (438+part*16)
         mov     ax,  [bx]                       ;ax=start sector of filesystem #1
-        print_char '%'
-        ;print_ax_dec
-        print_nchars bx,4
-        print_char '%'
     pop     bx
     pop     ax
 ret

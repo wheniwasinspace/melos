@@ -4,30 +4,22 @@ melos_fat16_getRootDirStart:
 ;INPUT
 ;dl=drive
 ;bx=pointer to 512 byte buffer
-;OUTPUT
-    push    ax
+;OUTPUT ax=start sector of ROOT_DIR
     push    bx
-        mov     cx,1;PUSH IT
+    push    cx
+    push    dx
+        mov     cx,1                                ;PUSH IT OUR MAKE INPUT
         call    melos_getFixedDiskStartOfPartition
-        mov     ax,0                            ;read sector 0=boot sector
         call    melos_readlbasectortobuffer
-        print_string txt_debug_nbytespblock
-        mov     ax,word[bx+0x0b]
-        print_ax_dec
-        call    melos_print_newline
-        print_string    txt_debug_nblockpalloc
-        mov     ah,0
-        mov     al,byte[bx+0x0d]
-        print_ax_dec
-        call    melos_print_newline
-        print_string    txt_debug_nrootdirs
-        mov     ax,word[bx+0x11]
-        call    print_ax_dec
-        call    melos_print_newline
+        mov     ax,word[bx+0x0e]            ;n Sectors reserved for boot
+        mov     cx,ax
+        mov     ah,0                        ;clear fist byte
+        mov     al,byte[bx+0x10]            ;numbers of FATs
+        mov     dx,ax
+        mov     ax,word[bx+0x16]            ;size of 1 FAT
+        mul dx
+        add ax,cx                           ;nFats*FATsize+reserved for boot
+    pop     dx
+    pop     cx
     pop     bx
-    pop     ax
 ret
-
-txt_debug_nbytespblock  db 'Number of bytes per block: ',0
-txt_debug_nblockpalloc  db 'Number of blocks per allocation unit: ',0
-txt_debug_nrootdirs     db 'Number of root directory entries: ',0
