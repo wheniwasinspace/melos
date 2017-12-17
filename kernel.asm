@@ -96,10 +96,10 @@ checknextfloppy:
     inc     dl
     jmp     checknextfloppy
 nomorefloppys:
-    mov dl,80h
-    mov ax,0
-    mov bx,myBuffer
-    call melos_readlbasectortobuffer
+;    mov dl,80h
+;    mov ax,0
+;    mov bx,myBuffer
+;    call melos_readlbasectortobuffer
 
     ;retrieve the number of fixed disks
     xor     ax,ax
@@ -134,20 +134,35 @@ checkFS:
 nomoreHDs:
     print_string txt_loadingok
     
-
-    mov     dl,0x80 ;HARDCODED FOR TESTING
+    print_char '@'
+    mov     dl,0x00 ;HARDCODED FOR TESTING
     mov     bx,myBuffer
-    call    melos_fat16_getRootDirStart
+    call    melos_fat12_getRootDirStart
     print_string    txt_total
     print_ax_dec
-    inc ax
-    mov     dl,0x80 ;HARDCODED FOR TESTING
+
+
+    mov     dl,0x00 ;HARDCODED FOR TESTING
     mov     bx,myBuffer
-    call    melos_readlbasectortobuffer
+    call    melos_readsectortobuffer
     call    debug_print_dashline
     print_nchars myBuffer,512
     call    debug_print_dashline
-
+    
+    mov     bx,0
+again:
+    mov     si,myBuffer
+    call    debug_print_dashline
+    push    bx
+    add     bx,si
+    
+    print_nchars bx,32
+    pop bx
+    call    debug_print_dashline
+    add     bx,32
+    call    debug_freeze1
+    cmp     bx,512
+    jb      again
     
 infiniteloop:
     jmp     infiniteloop

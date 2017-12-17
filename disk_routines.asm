@@ -152,6 +152,12 @@ ret
 ;---------------------------
 melos_readlbasectortobuffer:
 ;---------------------------
+pusha
+    print_string txt_debug_readlbasectortobuffer
+    mov ax,dx
+    print_ax_dec
+    call melos_print_newline
+popa
 ;reads one sector from an LBA drive into memory
 ;INPUT dl=drive ax=sector to read bx=pointer to buffer
 ;OUTPUT
@@ -169,6 +175,8 @@ melos_readlbasectortobufferretry:
     dec     cx
     cmp     cx,0        ;can prob be optimized away?
     jg      melos_readlbasectortobufferretry
+    popa
+    jmp melos_FatalIOError ;Make a simliar function that is non-critical
 melos_readlbasectortobufferdone:
 popa
 ret
@@ -206,6 +214,12 @@ ret
 ;----------------------------------
 melos_getFixedDiskStartOfPartition:
 ;----------------------------------
+pusha
+    print_string txt_debug_getFixedDiskStartOfPartition
+    mov ax,dx
+    print_ax_dec
+    call melos_print_newline
+popa
 ;INPUT dl=drive bx = 512K buffer, cx=partion(1-4)
 ;di = pointer to buffer for 8 byte identifier
 ;OUTPUT
@@ -236,6 +250,9 @@ ret
 txt_IOError db 'Fatal IO Error. System suspended',10,13,0
 myTempError db 'Drive timed out, assumed not ready',10,13,0
 txt_debug1  db 'DEBUG #1',10,13,0
+txt_debug_getFixedDiskStartOfPartition db 'in melos_getFixedDiskStartOfPartition',10,13,0
+txt_debug_readlbasectortobuffer db 'in melos_readlbasectortobuffer',10,13,0
+txt_debug_readsectortobuffer db 'in readsector 2 buffer...',10,13,0
 SectorsPerTrack		dw 18		; Sectors per track (36/cylinder)
 Sides			dw 2		; Number of sides/heads
 DAP:
