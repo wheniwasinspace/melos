@@ -9,7 +9,7 @@ nop
 OEM_ID                  db "MELIZZOS"       ; Disk label                                index 3
 nBytesPerSector         dw 512              ; Bytes per sector                          index 11
 nSectorsPerCluster      db 1                ; Sectors per cluster                       index 13
-ReservedForBoot         dw 1                ; Reserved sectors for boot record          index 14
+ReservedForBoot         dw 10                ; Reserved sectors for boot record          index 14
 NoOfFats                db 2                ; Number of copies of the FAT               index 16
 RootDirEntries          dw 224              ; Number of entries in root dir             index 17
                                             ; (224 * 32 = 7168 = 14 sectors to read)
