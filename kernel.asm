@@ -9,8 +9,10 @@ BITS 16
 %endmacro
 
 %macro print_string 1
-    mov     si,%1
-    call    melos_print_string
+    push    si
+        mov     si,%1
+        call    melos_print_string
+    pop     si
 %endmacro
 
 %macro print_nchars 2
@@ -149,20 +151,25 @@ nomoreHDs:
     print_nchars myBuffer,512
     call    debug_print_dashline
     
+    mov     si,myBuffer
     mov     bx,0
 again:
-    mov     si,myBuffer
+    mov     ax,[si+bx]
+    cmp     ax,0x00
+    je      done
+    mov     ax,[si+bx+0x0b]
+    cmp     ax,0x0f
+    je      skipthisone
     call    debug_print_dashline
-    push    bx
-    add     bx,si
-    
-    print_nchars bx,32
-    pop bx
+    lea     ax,[si+bx]    
+    print_nchars ax,32
     call    debug_print_dashline
+skipthisone:    
     add     bx,32
-    call    debug_freeze1
     cmp     bx,512
     jb      again
+done:    
+
     
 infiniteloop:
     jmp     infiniteloop
@@ -190,6 +197,7 @@ txt_nfixeddisks     db 'Number of fixed disks installed: ',0
 txt_LBAenabled      db ' LBA mode ',0
 txt_LBAnotEnabled   db ' CHS mode ',0
 txt_total           db 'Total skip: ',0
+txt_debug_longfile  db '(<-long file name)',0
 
 
 bootdisk            db 0
